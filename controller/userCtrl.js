@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import asyncHandler from "express-async-handler";
 import { generateToken } from "../config/jwtToken.js";
+import validateMongoId from "../utils/validateMongoDbId.js";
 
 export const createUser = asyncHandler(async (req, res) => {
   const email = req.body.email;
@@ -36,10 +37,11 @@ export const loginController = asyncHandler(async (req, res) => {
 
 // update user
 export const updateUser = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const { _id } = req.user;
+  validateMongoId(_id);
   try {
     const updatedUser = await User.findByIdAndUpdate(
-      id,
+      _id,
       {
         firstname: req?.body?.firstname,
         lastname: req?.body?.lastname,
@@ -69,6 +71,7 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 // get a single user
 export const getOneUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  validateMongoId(id);
   try {
     const getUser = await User.findById(id);
     res.json({
@@ -82,10 +85,53 @@ export const getOneUser = asyncHandler(async (req, res) => {
 // delete a user
 export const deleteUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  validateMongoId(id);
   try {
     const deleteUser = await User.findByIdAndDelete(id);
     res.json({
       deleteUser,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+// block user
+export const blockUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  validateMongoId(id);
+  try {
+    const blockUser = await User.findByIdAndUpdate(
+      id,
+      {
+        isBlocked: true,
+      },
+      {
+        new: true,
+      }
+    );
+    res.json(blockUser);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+// unblock user
+export const unblockUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  validateMongoId(id);
+  try {
+    const unblock = await User.findByIdAndUpdate(
+      id,
+      {
+        isBlocked: false,
+      },
+      {
+        new: true,
+      }
+    );
+    res.json({
+      message: "User Unblocked",
     });
   } catch (error) {
     throw new Error(error);
